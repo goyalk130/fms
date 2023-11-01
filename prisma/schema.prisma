@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       String  @id @default(auto()) @map("_id") @db.ObjectId
+  name     String?
+  userId   String? @unique
+  password String?
+  role String @default("admin") 
+}
+
+model Attdenace {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  timeSlotId String   @db.ObjectId
+  timeslot   TimeSlot @relation(fields: [timeSlotId], references: [id])
+  studentId  String?  @db.ObjectId
+  student    Student? @relation(fields: [studentId], references: [id])
+  facultyId  String   @db.ObjectId
+  faculty    Faculty  @relation(fields: [facultyId], references: [id])
+  status     Boolean
+}
+
+model Student {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  userId    String?     @unique
+  password  String?
+  classesId String?     @db.ObjectId
+  classes   Classes?    @relation(fields: [classesId], references: [id], onUpdate: Cascade)
+  role String @default("student") 
+  Attdenace Attdenace[]
+}
+
+model Faculty {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  name       String?
+  userId     String?     @unique 
+  password   String?
+  role String @default("faculty")
+  courseIds  String[]    @db.ObjectId
+  course     courses[]   @relation(fields: [courseIds], references: [id])
+  classesIds String[]    @db.ObjectId
+  classes    Classes[]   @relation(fields: [classesIds], references: [id])
+  Timeslot   TimeSlot[]
+  Attdenace  Attdenace[]
+}
+
+model courses {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  name       String?
+  code       String?  @unique
+  facultiIds String[]   @db.ObjectId
+  faculty    Faculty[]  @relation(fields: [facultiIds], references: [id])
+  Timeslot   TimeSlot[]
+}
+
+model Classes {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  name       String     @unique
+  student    Student[]
+  facultiIds String[]  @db.ObjectId
+  faculty    Faculty[] @relation(fields: [facultiIds], references: [id])
+  daySlot    DaySlot[]
+}
+
+model DaySlot {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String?
+  timeSlots TimeSlot[]
+  classesId String?    @db.ObjectId
+  Classes   Classes?   @relation(fields: [classesId], references: [id])
+}
+
+model TimeSlot {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  startTime String?
+  endTime   String?
+  status    Boolean     @default(false)
+  facultyId String?     @db.ObjectId
+  faculty   Faculty?    @relation(fields: [facultyId], references: [id])
+  courseId  String?     @db.ObjectId
+  course    courses?    @relation(fields: [courseId], references: [id])
+  daySlotId String?     @db.ObjectId
+  daySlots  DaySlot?    @relation(fields: [daySlotId], references: [id])
+  Attdenace Attdenace[]
+}
